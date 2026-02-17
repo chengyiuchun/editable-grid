@@ -3,11 +3,23 @@ import { render, screen } from '@testing-library/react'
 import Page from '../page'
 
 describe('Page', () => {
-    it('renders a heading', () => {
+    it('renders the grid and toolbar', () => {
         render(<Page />)
 
-        const heading = screen.getByRole('heading', { level: 1 })
+        // Check for toolbar buttons
+        const addButton = screen.getByRole('button', { name: /add row/i })
+        const deleteButton = screen.getByRole('button', { name: /delete rows/i })
+        const resetButton = screen.getByRole('button', { name: /reset/i })
 
-        expect(heading).toBeInTheDocument()
+        expect(addButton).toBeInTheDocument()
+        expect(deleteButton).toBeInTheDocument()
+        expect(resetButton).toBeInTheDocument()
+    })
+
+    it('renders the diff panel heading', () => {
+        render(<Page />)
+
+        const diffHeading = screen.getByRole('heading', { name: /changes \(delta\/diff\)/i })
+        expect(diffHeading).toBeInTheDocument()
     })
 })
