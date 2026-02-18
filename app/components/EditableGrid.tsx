@@ -181,7 +181,7 @@ const EditableGrid = forwardRef(<T extends Record<string, unknown>>(
     const undoColumn: ColDef = {
       headerName: '',
       width: 80,
-      pinned: 'left',
+      pinned: 'right',
       cellRenderer: undoCellRenderer,
       editable: false,
       sortable: false,
@@ -189,7 +189,7 @@ const EditableGrid = forwardRef(<T extends Record<string, unknown>>(
       suppressHeaderMenuButton: true
     };
     
-    return [undoColumn, ...columnDefs];
+    return [...columnDefs, undoColumn];
   }, [columnDefs, undoCellRenderer]);
 
   /**

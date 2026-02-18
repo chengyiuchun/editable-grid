@@ -32,6 +32,7 @@ const COLUMN_DEFS: ColDef<DemoRow>[] = [
     headerName: 'Name',
     editable: false,
     filter: 'agTextColumnFilter',
+    flex: 1,
   },
   {
     field: 'age',
