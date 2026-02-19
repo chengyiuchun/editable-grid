@@ -136,8 +136,8 @@ export default function Home() {
 
         {/* Grid */}
         <div className="flex-1 p-4 ag-theme-quartz">
-          <EditableGrid
-            ref={gridRef}
+          <EditableGrid<DemoRow>
+            gridRef={gridRef}
             rowData={INITIAL_DATA}
             columnDefs={COLUMN_DEFS}
             idField="name"

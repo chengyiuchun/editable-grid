@@ -93,7 +93,7 @@ describe('EditableGrid', () => {
 
       ({ container, getAllByRole } = render(
         <EditableGrid
-          ref={gridRef}
+          gridRef={gridRef}
           rowData={initialData}
           columnDefs={mockColumnDefs}
           idField="id"
@@ -163,7 +163,7 @@ describe('EditableGrid', () => {
 
       ({ container, getAllByRole } = render(
         <EditableGrid
-          ref={gridRef}
+          gridRef={gridRef}
           rowData={initialData}
           columnDefs={mockColumnDefs}
           idField="id"
@@ -240,7 +240,7 @@ describe('EditableGrid', () => {
 
       ({ container, getAllByRole } = render(
         <EditableGrid
-          ref={gridRef}
+          gridRef={gridRef}
           rowData={initialData}
           columnDefs={mockColumnDefs}
           idField="id"
@@ -318,7 +318,7 @@ describe('EditableGrid', () => {
 
       ({ container, getAllByRole } = render(
         <EditableGrid
-          ref={gridRef}
+          gridRef={gridRef}
           rowData={initialData}
           columnDefs={mockColumnDefs}
           idField="id"
@@ -403,7 +403,7 @@ describe('EditableGrid', () => {
 
       const { container, getAllByRole } = render(
           <EditableGrid
-              ref={gridRef}
+              gridRef={gridRef}
               rowData={mockInitialData()}
               columnDefs={mockColumnDefs}
               idField="id"
@@ -436,7 +436,7 @@ describe('EditableGrid', () => {
 
       const { container, getAllByRole } = render(
           <EditableGrid
-              ref={gridRef}
+              gridRef={gridRef}
               rowData={mockInitialData()}
               columnDefs={mockColumnDefs}
               idField="id"
@@ -526,7 +526,7 @@ describe('EditableGrid', () => {
 
       const { getAllByRole } = render(
         <EditableGrid
-          ref={gridRef}
+          gridRef={gridRef}
           rowData={mockInitialData()}
           columnDefs={mockColumnDefs}
           idField="id"
@@ -536,14 +536,14 @@ describe('EditableGrid', () => {
 
       await waitForRows(getAllByRole, 3);
 
-      act(() => {
+      // waitFor is needed in React 18, replace with act and move expectation out when we upgrade to React 19
+      await waitFor(() => {
         gridRef.current!.deleteSelectedRows();
         gridRef.current!.modifySelectedRows((row) => {
           (row as TestRow).score = 123;
         });
+        expect(onChangeMock).toHaveBeenLastCalledWith({});
       });
-
-      expect(onChangeMock).toHaveBeenLastCalledWith({});
     });
 
   });
@@ -565,7 +565,7 @@ describe('EditableGrid', () => {
 
       ({ container, getAllByRole } = render(
         <EditableGrid
-          ref={gridRef}
+          gridRef={gridRef}
           rowData={initialData}
           columnDefs={mockColumnDefs}
           idField="id"

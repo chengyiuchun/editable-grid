@@ -1,6 +1,6 @@
 "use client";
 
-import {forwardRef, useCallback, useImperativeHandle, useMemo, useState, type Ref} from 'react';
+import {useCallback, useImperativeHandle, useMemo, useState, type Ref} from 'react';
 import {castDraft, produce, type Draft} from 'immer';
 import {AgGridReact} from 'ag-grid-react';
 import type {CellEditRequestEvent, ColDef, GridApi, GridReadyEvent, RowClassRules} from 'ag-grid-community';
@@ -14,7 +14,8 @@ ModuleRegistry.registerModules([AllCommunityModule]);
  * Props for the EditableGrid component
  * @template T The type of row data
  */
-export interface EditableGridProps<T extends Record<string, unknown>> {
+export interface EditableGridProps<T> {
+  gridRef?: Ref<EditableGridHandle<T>>;
   rowData: T[];
   columnDefs: ColDef[];
   idField: keyof T;
@@ -25,7 +26,7 @@ export interface EditableGridProps<T extends Record<string, unknown>> {
  * Handle interface exposed via ref
  * @template T The type of row data
  */
-export interface EditableGridHandle<T extends Record<string, unknown>> {
+export interface EditableGridHandle<T> {
   addRow(row: T): void;
   deleteSelectedRows(): void;
   reset(): void;
@@ -46,7 +47,7 @@ export enum RowModificationState {
  * A single row's modification record
  * @template T The type of row data
  */
-export type Modification<T extends Record<string, unknown>> =
+export type Modification<T> =
   | {
       type: RowModificationState.Added | RowModificationState.Modified;
       /** Latest complete row data */
@@ -63,7 +64,7 @@ export type Modification<T extends Record<string, unknown>> =
  * Only rows with changes appear as keys.
  * @template T The type of row data
  */
-export type ChangeState<T extends Record<string, unknown>> = Record<string | number, Modification<T>>;
+export type ChangeState<T> = Record<string | number, Modification<T>>;
 
 /**
  * Deep equality comparison for objects
@@ -78,11 +79,8 @@ function deepEqual(obj1: unknown, obj2: unknown): boolean {
  * 
  * @template T The type of row data
  */
-const EditableGrid = forwardRef(<T extends Record<string, unknown>>(
-  props: EditableGridProps<T>,
-  ref: Ref<EditableGridHandle<T>>
-) => {
-  const { rowData, columnDefs, idField, onChange } = props;
+export default function EditableGrid<T, >(props: EditableGridProps<T>) {
+  const { gridRef, rowData, columnDefs, idField, onChange } = props;
   
   const [changes, setChanges] = useState<ChangeState<T>>({});
 
@@ -321,9 +319,9 @@ const EditableGrid = forwardRef(<T extends Record<string, unknown>>(
   }, [changes]);
 
   /**
-   * Expose methods via ref
+   * Expose methods via gridRef
    */
-  useImperativeHandle(ref, () => ({
+  useImperativeHandle(gridRef, () => ({
     addRow,
     deleteSelectedRows,
     reset,
@@ -373,8 +371,4 @@ const EditableGrid = forwardRef(<T extends Record<string, unknown>>(
       />
     </div>
   );
-});
-
-EditableGrid.displayName = 'EditableGrid';
-
-export default EditableGrid;
+}
