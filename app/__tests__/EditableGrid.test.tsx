@@ -58,6 +58,22 @@ describe('EditableGrid', () => {
       ]);
     });
 
+    it('renders empty initial data without errors', async () => {
+      const { container, getAllByRole } = render(
+        <EditableGrid
+          rowData={[]}
+          columnDefs={mockColumnDefs}
+          idField="id"
+        />
+      );
+
+      await waitForRows(getAllByRole, 0);
+
+      expect(extractGridContent(container)).toEqual([
+        ['', 'Name', 'Score', 'Active', ''],
+      ]);
+    });
+
   });
 
   describe('when a row is added', () => {
@@ -372,6 +388,161 @@ describe('EditableGrid', () => {
         ['false', 'Bob',     '35', 'false', ''],
         ['false', 'Charlie', '42', 'true',  ''],
       ]);
+      expect(onChangeMock).toHaveBeenLastCalledWith({});
+    });
+
+  });
+
+  describe('when a row is added then deleted', () => {
+
+    const newRow: TestRow = { id: '4', name: 'Diana', score: 50, active: false };
+
+    it('clears changes and reports an empty change set', async () => {
+      const onChangeMock = jest.fn<void, [ChangeState<Record<string, unknown>>]>();
+      const gridRef = React.createRef<EditableGridHandle<TestRow>>();
+
+      const { container, getAllByRole } = render(
+          <EditableGrid
+              ref={gridRef}
+              rowData={mockInitialData()}
+              columnDefs={mockColumnDefs}
+              idField="id"
+              onChange={onChangeMock}
+          />
+      );
+
+      await waitForRows(getAllByRole, 3);
+
+      act(() => { gridRef.current!.addRow(newRow); });
+      await waitForRows(getAllByRole, 4);
+
+      await selectRowAt(container, 5);
+      act(() => { gridRef.current!.deleteSelectedRows(); });
+
+      await waitForRows(getAllByRole, 3);
+
+      expect(onChangeMock).toHaveBeenLastCalledWith({});
+    });
+
+  });
+
+  describe('when a row is added then modified', () => {
+
+    const newRow: TestRow = { id: '4', name: 'Diana', score: 50, active: false };
+
+    it('keeps the row as added with the latest values', async () => {
+      const onChangeMock = jest.fn<void, [ChangeState<Record<string, unknown>>]>();
+      const gridRef = React.createRef<EditableGridHandle<TestRow>>();
+
+      const { container, getAllByRole } = render(
+          <EditableGrid
+              ref={gridRef}
+              rowData={mockInitialData()}
+              columnDefs={mockColumnDefs}
+              idField="id"
+              onChange={onChangeMock}
+          />
+      );
+
+      await waitForRows(getAllByRole, 3);
+
+      act(() => { gridRef.current!.addRow(newRow); });
+      await waitForRows(getAllByRole, 4);
+
+      await selectRowAt(container, 5);
+      act(() => {
+        gridRef.current!.modifySelectedRows((row) => {
+          (row as TestRow).score = 77;
+        });
+      });
+
+      await waitFor(() => {
+        expect(onChangeMock).toHaveBeenLastCalledWith({
+          '4': {
+            type: RowModificationState.Added,
+            data: { id: '4', name: 'Diana', score: 77, active: false },
+          },
+        });
+      });
+    });
+
+  });
+
+  describe('when a user edits a cell back to its original value', () => {
+
+    it('clears the change set after reverting inline edits', async () => {
+      const onChangeMock = jest.fn<void, [ChangeState<Record<string, unknown>>]>();
+
+      const { container, getAllByRole } = render(
+        <EditableGrid
+          rowData={mockInitialData()}
+          columnDefs={mockColumnDefs}
+          idField="id"
+          onChange={onChangeMock}
+        />
+      );
+
+      await waitForRows(getAllByRole, 3);
+
+      const aliceScoreCell = container.querySelector<HTMLElement>(
+        '[role="row"][aria-rowindex="2"] [col-id="score"]'
+      );
+      expect(aliceScoreCell).not.toBeNull();
+
+      await userEvent.dblClick(aliceScoreCell!);
+      const input = aliceScoreCell!.querySelector<HTMLInputElement>('input');
+      expect(input).not.toBeNull();
+
+      await userEvent.clear(input!);
+      await userEvent.type(input!, '30');
+      await userEvent.keyboard('{Enter}');
+
+      await waitFor(() => {
+        expect(extractGridContent(container)[1][4]).toBe('Undo');
+      });
+
+      await userEvent.dblClick(aliceScoreCell!);
+      const inputSecond = aliceScoreCell!.querySelector<HTMLInputElement>('input');
+      expect(inputSecond).not.toBeNull();
+
+      await userEvent.clear(inputSecond!);
+      await userEvent.type(inputSecond!, '28');
+      await userEvent.keyboard('{Enter}');
+
+      await waitFor(() => {
+        expect(extractGridContent(container)[1][4]).toBe('');
+      });
+
+      expect(onChangeMock).toHaveBeenLastCalledWith({});
+    });
+
+  });
+
+  describe('when no rows are selected', () => {
+
+    it('treats deleteSelectedRows and modifySelectedRows as no-ops', async () => {
+      const onChangeMock = jest.fn<void, [ChangeState<Record<string, unknown>>]>();
+      const gridRef = React.createRef<EditableGridHandle<TestRow>>();
+
+      const { getAllByRole } = render(
+        <EditableGrid
+          ref={gridRef}
+          rowData={mockInitialData()}
+          columnDefs={mockColumnDefs}
+          idField="id"
+          onChange={onChangeMock}
+        />
+      );
+
+      await waitForRows(getAllByRole, 3);
+
+      act(() => {
+        gridRef.current!.deleteSelectedRows();
+        gridRef.current!.modifySelectedRows((row) => {
+          (row as TestRow).score = 123;
+        });
+      });
+
       expect(onChangeMock).toHaveBeenLastCalledWith({});
     });
 
